@@ -21,7 +21,7 @@ export const initiateSubscription = catchAsync(async (req, res, next) => {
     tx_ref: `INSPECTRA_subs_${Date.now()}`,
     amount: plan.amount,
     currency: 'NGN',
-    payment_options: 'card, banktransfer, ussd, account',
+    payment_options: 'card,transfer,ussd',
     redirect_url: `${envConfig.CLIENT_URL}/app/subscription-history`,
     payment_plan: plan.flutterwavePlanId,
     customer: { email, name: fullname },
