@@ -31,7 +31,10 @@ export const appConfig = app => {
   app.use(helmet());
 
   app.use(
-    cors({ origin: ['http://localhost:5173', 'http://localhost:5174', '*'], credentials: true })
+    cors({
+      origin: ['https://inspectraweb.com', 'http://localhost:5173', 'http://localhost:5174', '*'],
+      credentials: true,
+    })
   );
 
   if (envConfig.NODE_ENV === 'development') app.use(morgan('dev'));

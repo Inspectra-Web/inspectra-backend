@@ -35,7 +35,7 @@ export const initiateSubscription = catchAsync(async (req, res, next) => {
 
   const fwResponse = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
     headers: {
-      Authorization: `Bearer ${envConfig.FLUTTERWAVE_TEST_SECRET_KEY}`,
+      Authorization: `Bearer ${envConfig.FLUTTERWAVE_LIVE_SECRET_KEY}`,
       'Content-Type': 'application/json',
     },
   });
@@ -87,7 +87,7 @@ export const renewSubscription = catchAsync(async (req, res, next) => {
 
   const fwResponse = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
     headers: {
-      Authorization: `Bearer ${envConfig.FLUTTERWAVE_TEST_SECRET_KEY}`,
+      Authorization: `Bearer ${envConfig.FLUTTERWAVE_LIVE_SECRET_KEY}`,
       'Content-Type': 'application/json',
     },
   });
@@ -169,7 +169,7 @@ export const verifySubscription = catchAsync(async (req, res, next) => {
 
 // Flutterwave Webhook
 export const flutterwaveWebhook = catchAsync(async (req, res, next) => {
-  const secretHash = envConfig.FLUTTERWAVE_TEST_SECRET_KEY;
+  const secretHash = envConfig.FLUTTERWAVE_LIVE_SECRET_KEY;
 
   const signature = req.headers['verif-hash'];
 
