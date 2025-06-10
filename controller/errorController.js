@@ -8,7 +8,7 @@ const handleCastErrorDB = err => {
 
 const handleDuplicateFieldsDB = err => {
   const value = err.errmsg.match(/(["'])(?:(?=(\\?))\2.)*?\1/)[0];
-  const message = `${value} alreay exists as an account.`;
+  const message = `${value} already exists as an account.`;
   return new AppError(message, 400);
 };
 
