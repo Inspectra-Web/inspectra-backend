@@ -1,0 +1,24 @@
+import { config } from 'dotenv';
+config({ path: './config.env' });
+
+export const envConfig = {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  EMAIL_USERNAME: process.env.EMAIL_USERNAME,
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+  EMAIL_HOST: process.env.EMAIL_HOST,
+  EMAIL_PORT: process.env.EMAIL_PORT,
+  JWT_TOKENSECRET: process.env.JWT_TOKENSECRET,
+  JWT_TOKENSECRET_EXPIRES: process.env.JWT_TOKENSECRET_EXPIRES,
+  JWT_TOKENSECRET_SESSION_EXPIRES: process.env.JWT_TOKENSECRET_SESSION_EXPIRES,
+  COOKIE_EXPIRES: process.env.COOKIE_EXPIRES,
+  CLIENT_URL: process.env.CLIENT_URL,
+  CLOUD_NAME: process.env.CLOUD_NAME,
+  API_KEY: process.env.API_KEY,
+  API_SECRET: process.env.API_SECRET,
+  FLUTTERWAVE_TEST_PUBLIC_KEY: process.env.FLUTTERWAVE_TEST_PUBLIC_KEY,
+  FLUTTERWAVE_TEST_SECRET_KEY: process.env.FLUTTERWAVE_TEST_SECRET_KEY,
+};

@@ -1,0 +1,69 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title New Property Listing Notification
+    link(href='https://fonts.googleapis.com/css?family=Roboto:400,600' rel='stylesheet' type='text/css')
+    style.
+      body {
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        font-family: 'Roboto', sans-serif !important;
+        color: #8094ae;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+      }
+      .header {
+        text-align: center;
+        background-color: #007bff;
+        color: white;
+        padding: 5px;
+        border-radius: 8px 8px 0 0;
+      }
+
+      h1{
+        font-size: 1.6rem;
+      }
+
+      .content {
+        padding: 20px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+      }
+  body
+    .container
+      .header
+        h1 Inspectra Admin Notification
+      .content
+        p Hello Admin,
+        p A new property listing has been #{reason} and is awaiting your review. Below are the details:
+        ul
+          li
+            strong Property Title: 
+            | #{propertyTitle}
+          li
+            strong Realtor: 
+            | #{fullname}
+          li
+            strong Listing Date: 
+            | #{listingDate}
+          li
+            strong Status: 
+            | Pending Approval
+        p Please log in to the Admin Dashboard to review and take action on this listing.
+        a(href=`${url}`, style='color: #0d6efc; text-decoration: none; word-break: break-all; margin-bottom: 1rem;')
+          | #{url}
+      .footer
+        a(href='https://inspectra.com/admin')
+          img(style='height: 40px' src='https://res.cloudinary.com/dpvelfbzm/image/upload/v1734901790/samples/inspectra-logo-primary-lg_hmwxja.png' alt='logo')
+        p(style='font-size: 1rem;') Regards, The Inspectra Team

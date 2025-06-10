@@ -1,0 +1,74 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Property Listing Review Update
+    link(href='https://fonts.googleapis.com/css?family=Roboto:400,600' rel='stylesheet' type='text/css')
+    style.
+      body {
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        font-family: 'Roboto', sans-serif !important;
+        color: #8094ae;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+      }
+      .header {
+        text-align: center;
+        background-color: #007bff;
+        color: white;
+        padding: 5px;
+        border-radius: 8px 8px 0 0;
+      }
+
+      h1{
+        font-size: 1.6rem;
+      }
+
+      .content {
+        padding: 20px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+      }
+  body
+    .container
+      .header
+        h1 Inspectra Notification
+      .content
+        p Hello #{fullname},
+        if reviewStatus === 'approved'
+          p
+            | Congratulations! Your property listing titled "#{propertyTitle}" has been
+            |
+            strong approved
+            | . It is now live on our platform.
+          p We look forward to helping you connect with potential clients!
+        else
+          p
+            | Unfortunately, your property listing titled "#{propertyTitle}" has been
+            |
+            strong rejected
+            | .
+          p Reason for rejection:
+          blockquote #{reason}
+          p Please ensure your listing meets the following criteria:
+          ul
+            li Upload clear, high-quality, and landscape-oriented images.
+            li Provide accurate and detailed property descriptions.
+            li Ensure pricing and address information are correct.
+            li Ensure you have an updated realtor profile which is essential for clients reach out.
+          p You may resubmit your listing after making the necessary adjustments.
+      .footer
+        a(href='https://inspectra.com')
+          img(style='height: 40px' src='https://res.cloudinary.com/dpvelfbzm/image/upload/v1734901790/samples/inspectra-logo-primary-lg_hmwxja.png' alt='logo')
+        p(style='font-size: 1rem;') Regards, The Inspectra Team
