@@ -136,6 +136,7 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
     : [];
 
   let newImages = property.images || [];
+  let newlyUploadedImages = [];
 
   if (propertyId) {
     const imagesToDelete = property.images.filter(
@@ -157,6 +158,7 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
       });
 
       const uploadedImages = await Promise.all(imagesUploadPromises);
+      newlyUploadedImages = uploadedImages;
       newImages = [...newImages, ...uploadedImages];
     } catch (error) {
       return next(new AppError('Image upload failed. Please try again.', 500));
@@ -176,7 +178,13 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
 
       if (property.videoFile?.publicId) await deleteFromCloudinary(property.videoFile.publicId);
     } catch (error) {
-      console.log(error);
+      // Clean up only the images uploaded in this session (not existing ones)
+      const cleanupImagePromises = newlyUploadedImages.map(img =>
+        deleteFromCloudinary(img.publicId)
+      );
+      await Promise.allSettled(cleanupImagePromises);
+
+      console.log('Video upload failed during update: ', error);
       return next(new AppError('Video upload failed. Please try again.', 500));
     }
   }

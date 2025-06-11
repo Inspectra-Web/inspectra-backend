@@ -32,7 +32,7 @@ export const appConfig = app => {
 
   app.use(
     cors({
-      origin: ['https://inspectraweb.com', 'https://www.inspectraweb.com'],
+      origin: ['https://inspectraweb.com', 'https://www.inspectraweb.com', 'http://localhost:5173'],
       credentials: true,
     })
   );

@@ -9,7 +9,7 @@ import { authenticateGuestUser, protect, restrictTo } from '../controller/authCo
 
 const router = Router();
 
-router.route('/realtor-chat').get(protect, restrictTo('realtor'), getRealtorChatRooms);
+router.route('/realtor-chat').get(protect, restrictTo('realtor', 'admin'), getRealtorChatRooms);
 router.route('/guest/:token').get(authenticateGuestUser, getGuestChatRooms);
 router.route('/create-chat').post(createChatRoom);
 router.route('/guest/:guestId').get(getGuestUser);
