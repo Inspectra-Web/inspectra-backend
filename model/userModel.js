@@ -8,7 +8,12 @@ const { hash, compare } = pkg;
 
 const userSchema = new Schema(
   {
-    fullname: { type: String, trim: true, required: [true, 'Please tell us your name'] },
+    fullname: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      required: [true, 'Please tell us your name'],
+    },
     email: {
       type: String,
       required: [true, 'Please provide your email'],
