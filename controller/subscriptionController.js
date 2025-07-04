@@ -82,6 +82,7 @@ export const renewSubscription = catchAsync(async (req, res, next) => {
     meta: {
       planId: plan._id.toString(),
       userEmail: user.email,
+      type: 'subscription',
     },
   };
 
@@ -111,7 +112,6 @@ export const verifySubscription = catchAsync(async (req, res, next) => {
 
     const data = response.data;
 
-    console.log(data);
 
     const planId = data.meta?.planId;
     const email = data.meta?.userEmail || data.customer?.email;
@@ -164,70 +164,6 @@ export const verifySubscription = catchAsync(async (req, res, next) => {
     });
   } else {
     return next(new AppError('Payment not successful', 400));
-  }
-});
-
-// Flutterwave Webhook
-export const flutterwaveWebhook = catchAsync(async (req, res, next) => {
-  const secretHash = envConfig.FLUTTERWAVE_LIVE_SECRET_KEY;
-
-  const signature = req.headers['verif-hash'];
-
-  if (!signature || signature !== secretHash)
-    return next(new AppError('Unauthorized webhook', 401));
-
-  const payload = req.body;
-
-  if (payload?.event === 'charge.completed' && payload.data.status === 'successful') {
-    const data = payload.data;
-    const planId = payload.meta_data?.planId;
-    const email = payload.meta_data?.userEmail || data.customer?.email;
-    const plan = await Plan.findById(planId);
-    const user = await User.findOne({ email });
-
-    if (!plan || !user)
-      return res.status(200).json({ message: 'User or Plan not found - webhook received' });
-
-    await Subscription.updateMany(
-      { user: user._id, subscriptionStatus: 'active' },
-      { $set: { subscriptionStatus: 'expired' } }
-    );
-
-    const startDate = new Date();
-    const endDate = new Date();
-
-    if (plan.interval === 'monthly') endDate.setMonth(endDate.getMonth() + 1);
-    else endDate.setFullYear(endDate.getFullYear() + 1);
-
-    const subscription = await Subscription.create({
-      user: user._id,
-      userEmail: email,
-      plan: plan._id,
-      planName: plan.name,
-      amount: data.amount,
-      interval: plan.interval,
-      paymentStatus: 'successful',
-      subscriptionStatus: 'active',
-      paymentType: data.payment_type,
-      txRef: data.tx_ref,
-      flutterwaveTransactionId: data.id,
-      paymentPlanId: plan.flutterwavePlanId,
-      subscriptionStartDate: startDate,
-      subscriptionEndDate: endDate,
-    });
-
-    user.plan = plan.name;
-    user.planPaidType = plan.interval;
-    user.planActivatedAt = startDate;
-    user.planExpiresAt = endDate;
-
-    await user.save({ validateBeforeSave: true });
-
-    console.log(subscription);
-
-    return res.status(200).json({ message: 'Subscription saved' });
-  } else {
-    return res.status(200).json({ message: 'Ignored event' });
   }
 });
 

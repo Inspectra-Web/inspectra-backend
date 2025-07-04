@@ -34,7 +34,8 @@ const generateReferralCode = (name, userId) =>
 // Account Registeration
 export const signup = catchAsync(async (req, res, next) => {
   const { fullname, email, password, passwordConfirm, role, referralCode } = req.body;
-  const otp = crypto.randomBytes(2).toString('hex');
+
+  // const otp = crypto.randomBytes(2).toString('hex');
 
   let referredByUser = null;
 
@@ -43,43 +44,28 @@ export const signup = catchAsync(async (req, res, next) => {
     if (!referredByUser) return next(new AppError('Invalid referral code', 400));
   }
 
-  const expires = new Date();
-  expires.setMonth(expires.getMonth() + 1);
-
-  const newUser = await User.create({
+  const userData = {
     fullname,
     email,
     password,
     passwordConfirm,
     role,
-    otp,
+    // otp,
     referredBy: referredByUser?._id || undefined,
-    plan: 'Starter',
-    planActivatedAt: new Date(),
-    planExpiresAt: expires,
-    planPaidType: 'monthly',
-  });
+  };
 
-  const starterPlan = await Plan.findOne({ name: 'Starter', interval: 'monthly' });
-  if (!starterPlan) return next(new AppError('Starter plan not found', 500));
+  if (role === 'realtor') {
+    const expires = new Date();
+    expires.setMonth(expires.getMonth() + 1);
 
-  const existingSubscription = await Subscription.findOne({ user: newUser._id });
-  if (!existingSubscription) {
-    // Create a free trial subscription
-    await Subscription.create({
-      user: newUser._id,
-      plan: starterPlan._id,
-      planName: starterPlan.name,
-      interval: starterPlan.interval,
-      amount: 0,
-      userEmail: newUser.email,
-      paymentStatus: 'successful',
-      subscriptionStatus: 'active',
-      paymentType: 'trial',
-      subscriptionStartDate: newUser.planActivatedAt,
-      subscriptionEndDate: newUser.planExpiresAt,
-    });
+    userData.plan = 'Starter';
+    userData.planActivatedAt = new Date();
+    userData.planExpiresAt = expires;
+    userData.planPaidType = 'monthly';
   }
+
+  const newUser = await User.create(userData);
+
   const userReferralCode = generateReferralCode(newUser.fullname.trim().split(' ')[0], newUser._id);
   await User.findByIdAndUpdate(newUser._id, { referralCode: userReferralCode });
 
@@ -97,15 +83,40 @@ export const signup = catchAsync(async (req, res, next) => {
 
   await User.findByIdAndUpdate(newUser._id, { profile: profile._id });
 
+  if (role === 'realtor') {
+    const starterPlan = await Plan.findOne({ name: 'Starter', interval: 'monthly' });
+    if (!starterPlan) return next(new AppError('Starter plan not found', 500));
+
+    const existingSubscription = await Subscription.findOne({ user: newUser._id });
+    if (!existingSubscription) {
+      // Create a free trial subscription
+      await Subscription.create({
+        user: newUser._id,
+        plan: starterPlan._id,
+        planName: starterPlan.name,
+        interval: starterPlan.interval,
+        amount: 0,
+        userEmail: newUser.email,
+        paymentStatus: 'successful',
+        subscriptionStatus: 'active',
+        paymentType: 'trial',
+        subscriptionStartDate: newUser.planActivatedAt,
+        subscriptionEndDate: newUser.planExpiresAt,
+      });
+    }
+  }
+
   if (referredByUser) {
     referredByUser.referrals.push(newUser._id);
     referredByUser.totalReferrals += 1;
     await referredByUser.save({ validateBeforeSave: false });
   }
 
-  const otpUrl = `${envConfig.CLIENT_URL}/verify-otp/${signToken({ otp, id: newUser._id }, 'otp')}`;
-
-  await new Email(newUser, otpUrl).sendWelcome();
+  // const otpUrl = `${envConfig.CLIENT_URL}/verify-otp/${signToken({ otp, id: newUser._id }, 'otp')}`;
+  const url = `${envConfig.CLIENT_URL}/verify/${signToken({
+    id: newUser._id,
+  })}`;
+  await new Email(newUser, url).sendVerify();
   await new Email(newUser, '', role.toUpperCase(), {}, envConfig.EMAIL_FROM).sendAdminNewUser();
 
   return res.status(201).json({
@@ -156,9 +167,11 @@ export const emailVerification = catchAsync(async (req, res, next) => {
   if (user?.role === 'admin')
     await Profile.findByIdAndUpdate(userId, { verified: true }, { new: true });
 
-  res
-    .status(200)
-    .json({ status: 'success', message: 'Email verified successfully! You can now log in.' });
+  res.status(200).json({
+    status: 'success',
+    message: 'Email verified successfully! You can now log in.',
+    data: user.role,
+  });
 });
 
 // Account Login

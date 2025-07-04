@@ -28,7 +28,6 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
     return next(new AppError('Kindly verify your profile to proceed!', 400));
 
   const { files } = req;
-  console.log(files);
   const imageFiles = files?.images || [];
   const videoFiles = files?.videoFile || [];
 

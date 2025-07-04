@@ -16,7 +16,7 @@ profileRoute.route('/realtor-stats').get(protect, restrictTo('admin'), getRealto
 profileRoute
   .route('/:id')
   .get(readProfile)
-  .patch(protect, restrictTo('admin', 'realtor'), upload.single('avatar'), updateProfile);
+  .patch(protect, restrictTo('admin', 'realtor', 'client'), upload.single('avatar'), updateProfile);
 
 profileRoute
   .route('/upload/:id')

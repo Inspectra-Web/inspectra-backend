@@ -1,14 +1,10 @@
 import ChatRoom from '../model/chatRoomModel.js';
-import GuestUser from '../model/guestUserModel.js';
 import Message from '../model/messageModel.js';
 import User from '../model/userModel.js';
 import AppError from '../utils/appError.js';
 
 export const saveMessage = async ({ chatroom, content, sender, senderModel }) => {
-  if (!['User', 'GuestUser'].includes(senderModel)) throw new AppError('Invalid Sender Type.', 400);
-
-  const SenderModel = senderModel === 'User' ? User : GuestUser;
-  const senderData = await SenderModel.findById(sender);
+  const senderData = await User.findById(sender);
   if (!senderData) throw new AppError('Sender not found.', 404);
 
   const chatRoom = await ChatRoom.findById(chatroom);

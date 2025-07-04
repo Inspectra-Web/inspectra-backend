@@ -82,6 +82,12 @@ const profileSchema = new Schema(
     deactivated: { type: Boolean, default: false },
     deactivatedBy: { type: Schema.Types.ObjectId, ref: 'Profile', default: null },
     consultationCost: { type: Number, default: 0 },
+    accountDetails: {
+      accountName: String,
+      accountNumber: String,
+      bankName: String,
+      bankCode: String,
+    },
   },
   { timestamps: true }
 );

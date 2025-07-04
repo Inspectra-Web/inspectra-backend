@@ -45,10 +45,10 @@ const userSchema = new Schema(
       enum: ['realtor', 'admin', 'agency', 'property owner', 'client'],
       default: 'realtor',
     },
-    plan: { type: String, enum: ['Starter', 'Professional', 'Agency'], default: 'Starter' },
-    planActivatedAt: { type: Date, default: Date.now() },
+    plan: { type: String, enum: ['Starter', 'Professional', 'Agency'], default: null },
+    planActivatedAt: { type: Date, default: null },
     planExpiresAt: { type: Date },
-    planPaidType: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
+    planPaidType: { type: String, enum: ['monthly', 'yearly'], default: null },
     otp: { type: String, default: undefined },
     passwordResetToken: String,
     passwordResetExpires: String,
@@ -79,7 +79,7 @@ userSchema.methods.createPasswordResetToken = function () {
   this.passwordResetToken = createHash('sha256').update(resetToken).digest('hex');
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
-  console.log({ resetToken }, { passwordResetToken: this.passwordResetToken });
+  // console.log({ resetToken }, { passwordResetToken: this.passwordResetToken });
 
   return resetToken;
 };

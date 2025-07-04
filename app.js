@@ -18,6 +18,7 @@ import chatRoute from './routes/chatRoomRoutes.js';
 import messageRoute from './routes/messageRoutes.js';
 import planRoute from './routes/planRoutes.js';
 import subscriptionRoute from './routes/subscriptionRoutes.js';
+import { flutterwaveWebhook } from './controller/paymentsController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,6 +52,7 @@ export const appConfig = app => {
   app.use('/api/v1/message', messageRoute);
   app.use('/api/v1/plan', planRoute);
   app.use('/api/v1/subscription', subscriptionRoute);
+  app.post('/api/v1/flutterwave/webhook', flutterwaveWebhook);
 
   app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));

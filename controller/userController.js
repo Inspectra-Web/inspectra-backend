@@ -21,7 +21,7 @@ export const getUser = catchAsync(async (req, res, next) => {
 
 // Get All Realtors
 export const getAllRealtors = catchAsync(async (req, res, next) => {
-  const filter = {};
+  const filter = { role: 'realtor' };
   if (req.query.verified) filter.verified = Boolean(req.query.verified) === true;
   const features = new APIFeatures(Profile.find(filter), req.query)
     .sort()

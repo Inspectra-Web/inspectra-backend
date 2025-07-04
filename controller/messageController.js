@@ -1,8 +1,6 @@
 import { saveMessage } from '../helpers/sendMessageHelper.js';
-import ChatRoom from '../model/chatRoomModel.js';
-import GuestUser from '../model/guestUserModel.js';
 import Message from '../model/messageModel.js';
-import User from '../model/userModel.js';
+
 import AppError from '../utils/appError.js';
 import catchAsync from '../utils/catchAsync.js';
 

@@ -2,6 +2,7 @@ import { Schema, model } from 'mongoose';
 
 const inquirySchema = new Schema(
   {
+    client: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     clientName: { type: String, required: true },
     clientEmail: { type: String, trim: true, lowercase: true, required: true },
     message: { type: String, required: true },
@@ -22,6 +23,7 @@ const inquirySchema = new Schema(
     },
     property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },
     realtor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    propertyManager: { type: String, required: true },
   },
   { timestamps: true }
 );
