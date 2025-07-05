@@ -2,6 +2,7 @@ import Profile from '../model/profileModel.js';
 
 export const realtorStats = () => {
   return Profile.aggregate([
+    { $match: { role: 'realtor' } },
     {
       $facet: {
         totalRealtors: [{ $count: 'count' }],
@@ -13,11 +14,11 @@ export const realtorStats = () => {
     },
     {
       $project: {
-        totalRealtors: { $arrayElemAt: ['$totalRealtors.count', 0] },
-        verifiedRealtors: { $arrayElemAt: ['$verifiedRealtors.count', 0] },
-        notVerifiedRealtors: { $arrayElemAt: ['$notVerifiedRealtors.count', 0] },
-        maleRealtors: { $arrayElemAt: ['$maleRealtors.count', 0] },
-        femaleRealtors: { $arrayElemAt: ['$femaleRealtors.count', 0] },
+        totalRealtors: { $ifNull: [{ $arrayElemAt: ['$totalRealtors.count', 0] }, 0] },
+        verifiedRealtors: { $ifNull: [{ $arrayElemAt: ['$verifiedRealtors.count', 0] }, 0] },
+        notVerifiedRealtors: { $ifNull: [{ $arrayElemAt: ['$notVerifiedRealtors.count', 0] }, 0] },
+        maleRealtors: { $ifNull: [{ $arrayElemAt: ['$maleRealtors.count', 0] }, 0] },
+        femaleRealtors: { $ifNull: [{ $arrayElemAt: ['$femaleRealtors.count', 0] }, 0] },
       },
     },
   ]);
