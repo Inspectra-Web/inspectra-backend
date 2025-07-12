@@ -17,8 +17,33 @@ export const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
-export const resizeImage = async (buffer, width = 500, height = 500) => {
-  return await sharp(buffer).resize({ width, height, fit: 'cover' }).toFormat('jpeg').toBuffer();
+export const resizeImage = async (
+  buffer,
+  width = 500,
+  height = 500,
+  options = { fitMode: 'cover', preserveAspect: 'false' }
+) => {
+  const image = sharp(buffer);
+
+  if (options.preserveAspect) {
+    const metadata = await image.metadata();
+
+    const isPortrait = metadata.height > metadata.width;
+
+    const resizeTo = isPortrait ? { width: 800, height: 1200 } : { width: 1600, height: 800 };
+
+    return await image
+      .resize(resizeTo.width, resizeTo.height, { fit: 'inside', withoutEnlargement: true })
+      .toFormat('jpeg')
+      .toBuffer();
+  }
+
+  return await image
+    .resize(width, height, {
+      fit: options.fitMode || 'cover',
+    })
+    .toFormat('jpeg')
+    .toBuffer();
 };
 
 export const uploadToCloudinary = (buffer, folder, resource_type = 'image') => {

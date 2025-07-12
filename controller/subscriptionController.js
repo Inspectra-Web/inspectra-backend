@@ -112,7 +112,6 @@ export const verifySubscription = catchAsync(async (req, res, next) => {
 
     const data = response.data;
 
-
     const planId = data.meta?.planId;
     const email = data.meta?.userEmail || data.customer?.email;
 

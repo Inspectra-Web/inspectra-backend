@@ -17,6 +17,8 @@ export const canCreateListing = async (userId, type = 'normal') => {
 
   if (!subscription) return { allowed: false, message: 'No active subscription found' };
 
+  if (subscription.hasLifeTimeAccess) return { allowed: true, subscription };
+
   const { listingsUsed, featuredListingUsed } = subscription.usage;
   const { maxListings, featuredListings } = subscription.plan.features;
 

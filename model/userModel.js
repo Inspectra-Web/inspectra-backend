@@ -58,6 +58,7 @@ const userSchema = new Schema(
     referredBy: { type: String },
     referrals: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     totalReferrals: { type: Number, default: 0 },
+    hasLifeTimeAccess: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

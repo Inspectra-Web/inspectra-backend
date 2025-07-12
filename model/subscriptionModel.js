@@ -28,6 +28,7 @@ const subscriptionSchema = new Schema(
     paymentPlanId: Number,
     subscriptionStartDate: { type: Date, default: Date.now },
     subscriptionEndDate: Date,
+    hasLifeTimeAccess: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

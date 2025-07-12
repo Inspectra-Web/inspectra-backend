@@ -150,7 +150,7 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
   if (imageFiles && imageFiles.length > 0) {
     try {
       const imagesUploadPromises = imageFiles.map(async file => {
-        const resizeImg = await resizeImage(file?.buffer, 1600, 800);
+        const resizeImg = await resizeImage(file?.buffer, 1600, 800, { preserveAspect: true });
         const { secure_url, public_id } = await uploadToCloudinary(resizeImg, 'property_images');
 
         return { url: secure_url, publicId: public_id };
