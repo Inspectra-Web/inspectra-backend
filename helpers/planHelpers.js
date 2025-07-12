@@ -15,7 +15,7 @@ export const canCreateListing = async (userId, type = 'normal') => {
     subscriptionEndDate: { $gte: new Date() },
   }).populate('plan');
 
-  if (subscription.hasLifeTimeAccess) return { allowed: true, subscription };
+  if (subscription?.hasLifeTimeAccess) return { allowed: true, subscription };
 
   if (!subscription) return { allowed: false, message: 'No active subscription found' };
 
