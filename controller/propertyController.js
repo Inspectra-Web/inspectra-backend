@@ -286,6 +286,8 @@ export const deletePropertyListing = catchAsync(async (req, res, next) => {
     await Promise.all(deleteImagesPromises);
   }
 
+  if (property.videoFile?.publicId) await deleteFromCloudinary(property.videoFile?.publicId);
+
   const subscription = await Subscription.findOne({
     user: property.user,
     subscriptionStatus: 'active',
