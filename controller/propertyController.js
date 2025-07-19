@@ -277,8 +277,8 @@ export const deletePropertyListing = catchAsync(async (req, res, next) => {
 
   if (!property) return next(new AppError('Property not found', 404));
 
-  if (property.user.toString() !== req.user._id && req.user.role !== 'admin')
-    return next(new AppError('You are not authorized to delete this property', 403));
+  // if (property.user.toString() !== req.user._id && req.user.role !== 'admin')
+  //   return next(new AppError('You are not authorized to delete this property', 403));
 
   if (property.images && property.images.length > 0) {
     const deleteImagesPromises = property.images.map(image => deleteFromCloudinary(image.publicId));
@@ -286,7 +286,8 @@ export const deletePropertyListing = catchAsync(async (req, res, next) => {
     await Promise.all(deleteImagesPromises);
   }
 
-  if (property.videoFile?.publicId) await deleteFromCloudinary(property.videoFile?.publicId);
+  if (property.videoFile?.publicId)
+    await deleteFromCloudinary(property.videoFile?.publicId, 'video');
 
   const subscription = await Subscription.findOne({
     user: property.user,
@@ -304,6 +305,10 @@ export const deletePropertyListing = catchAsync(async (req, res, next) => {
       await subscription.save();
     }
   }
+
+  await User.findByIdAndUpdate(property.user, {
+    $pull: { property: property._id },
+  });
 
   await property.deleteOne();
 

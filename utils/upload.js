@@ -60,9 +60,9 @@ export const uploadToCloudinary = (buffer, folder, resource_type = 'image') => {
   });
 };
 
-export const deleteFromCloudinary = async publicId =>
+export const deleteFromCloudinary = async (publicId, resourceType = 'image') =>
   new Promise((resolve, reject) =>
-    cloudinary.uploader.destroy(publicId, (error, result) => {
+    cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (error, result) => {
       if (error) reject(error);
       else resolve(result);
     })
