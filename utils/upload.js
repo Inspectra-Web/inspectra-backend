@@ -21,7 +21,7 @@ export const resizeImage = async (
   buffer,
   width = 500,
   height = 500,
-  options = { fitMode: 'cover', preserveAspect: 'false' }
+  options = { fitMode: 'cover', preserveAspect: false }
 ) => {
   const image = sharp(buffer);
 
@@ -41,6 +41,7 @@ export const resizeImage = async (
   return await image
     .resize(width, height, {
       fit: options.fitMode || 'cover',
+      position: 'top',
     })
     .toFormat('jpeg')
     .toBuffer();
