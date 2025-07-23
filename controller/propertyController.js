@@ -160,6 +160,7 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
       newlyUploadedImages = uploadedImages;
       newImages = [...newImages, ...uploadedImages];
     } catch (error) {
+      console.error(error);
       return next(new AppError('Image upload failed. Please try again.', 500));
     }
   }
