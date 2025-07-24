@@ -358,7 +358,7 @@ export const getPropertyListings = catchAsync(async (req, res, next) => {
     .paginate();
 
   const properties = await features.query;
-  const totalCount = await Property.countDocuments();
+  const totalCount = await Property.countDocuments({ reviewStatus });
 
   res.status(200).json({
     status: 'success',
@@ -370,17 +370,43 @@ export const getPropertyListings = catchAsync(async (req, res, next) => {
 // Get / View Listings Infinite
 export const getPropertyListingsInfinite = catchAsync(async (req, res, next) => {
   const { page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
 
-  const features = new APIFeatures(Property.find({ reviewStatus: 'approved' }), req.query)
+  const baseQuery = Property.find({ reviewStatus: 'approved' });
+
+  const features = new APIFeatures(baseQuery, req.query)
     .filter()
     .search(['title', 'address.city', 'address.fullAddress', 'address.state', 'propertyId'])
     .applyFilters()
-    .sort()
-    .limitFields()
-    .paginate();
+    .limitFields();
 
-  const properties = await features.query;
-  const totalCount = await Property.countDocuments();
+  features.query = features.query.sort({
+    isFeatured: -1,
+    createdAt: -1,
+  });
+
+  const properties = await Property.aggregate([
+    { $match: { reviewStatus: 'approved' } },
+    {
+      $addFields: {
+        isFeatured: {
+          $cond: [{ $in: ['Featured', '$variations'] }, 1, 0],
+        },
+      },
+    },
+    { $sort: { isFeatured: -1, createdAt: -1 } },
+    { $skip: skip },
+    { $limit: Number(limit) },
+    {
+      $project: {
+        __v: 0,
+        updatedAt: 0,
+        isFeatured: 0,
+      },
+    },
+  ]);
+
+  const totalCount = await Property.countDocuments({ reviewStatus: 'approved' });
   const totalPages = Math.ceil(totalCount / limit);
 
   res.status(200).json({
