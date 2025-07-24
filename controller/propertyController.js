@@ -176,7 +176,7 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
         return next(new AppError('All uploaded images failed to process.', 400));
 
       newlyUploadedImages = uploadedImages;
-      newImages = [...newImages, newlyUploadedImages];
+      newImages = [...newImages, ...newlyUploadedImages];
       // const imagesUploadPromises = imageFiles.map(async file => {
       //   const resizeImg = await resizeImage(file?.buffer, 1600, 800, { preserveAspect: true });
       //   const { secure_url, public_id } = await uploadToCloudinary(resizeImg, 'property_images');
