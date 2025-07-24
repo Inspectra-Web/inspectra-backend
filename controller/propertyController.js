@@ -10,7 +10,7 @@ import { envConfig } from '../configuration/environmentConfig.js';
 import Profile from '../model/profileModel.js';
 import { canCreateListing } from '../helpers/planHelpers.js';
 import Subscription from '../model/subscriptionModel.js';
-
+import { fileTypeFromBuffer } from 'file-type';
 // Validate File Size
 const validateFileSize = (files, maxSize, typeLabel) => {
   for (const file of files) {
@@ -149,16 +149,44 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
   }
   if (imageFiles && imageFiles.length > 0) {
     try {
-      const imagesUploadPromises = imageFiles.map(async file => {
-        const resizeImg = await resizeImage(file?.buffer, 1600, 800, { preserveAspect: true });
-        const { secure_url, public_id } = await uploadToCloudinary(resizeImg, 'property_images');
+      const uploadedImages = [];
 
-        return { url: secure_url, publicId: public_id };
-      });
+      for (const file of imageFiles) {
+        try {
+          const fileType = await fileTypeFromBuffer(file.buffer);
+          if (!fileType || !fileType.mime.startsWith('image/')) {
+            console.warn('Skipped invalid image:', file.originalname);
+            continue; // Skip this file
+          }
 
-      const uploadedImages = await Promise.all(imagesUploadPromises);
+          const resizedImage = await resizeImage(file.buffer, 1600, 800, { preserveAspect: true });
+
+          const { secure_url, public_id } = await uploadToCloudinary(
+            resizedImage,
+            'property_images'
+          );
+          uploadedImages.push({ url: secure_url, publicId: public_id });
+        } catch (imgErr) {
+          console.error(`Failed to process image: ${file.originalname}`, imgErr.message);
+          // Optionally: continue silently, or push an error notice
+        }
+      }
+
+      if (uploadedImages.length === 0)
+        return next(new AppError('All uploaded images failed to process.', 400));
+
       newlyUploadedImages = uploadedImages;
-      newImages = [...newImages, ...uploadedImages];
+      newImages = [...newImages, newlyUploadedImages];
+      // const imagesUploadPromises = imageFiles.map(async file => {
+      //   const resizeImg = await resizeImage(file?.buffer, 1600, 800, { preserveAspect: true });
+      //   const { secure_url, public_id } = await uploadToCloudinary(resizeImg, 'property_images');
+
+      //   return { url: secure_url, publicId: public_id };
+      // });
+
+      // const uploadedImages = await Promise.all(imagesUploadPromises);
+      // newlyUploadedImages = uploadedImages;
+      // newImages = [...newImages, ...uploadedImages];
     } catch (error) {
       console.error(error);
       return next(new AppError('Image upload failed. Please try again.', 500));
