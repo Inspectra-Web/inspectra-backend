@@ -23,28 +23,35 @@ export const resizeImage = async (
   height = 500,
   options = { fitMode: 'cover', preserveAspect: false }
 ) => {
-  const image = sharp(buffer);
+  try {
+    const image = sharp(buffer);
 
-  if (options.preserveAspect) {
-    const metadata = await image.metadata();
+    if (options.preserveAspect) {
+      const metadata = await image.metadata();
 
-    const isPortrait = metadata.height > metadata.width;
+      const isPortrait = metadata.height > metadata.width;
 
-    const resizeTo = isPortrait ? { width: 800, height: 1200 } : { width: 1600, height: 800 };
+      const resizeTo = isPortrait ? { width: 800, height: 1200 } : { width: 1600, height: 800 };
+
+      return await image
+        .resize(resizeTo.width, resizeTo.height, { fit: 'inside', withoutEnlargement: true })
+        .toFormat('jpeg')
+        .toBuffer();
+    }
 
     return await image
-      .resize(resizeTo.width, resizeTo.height, { fit: 'inside', withoutEnlargement: true })
+      .resize(width, height, {
+        fit: options.fitMode || 'cover',
+        position: 'top',
+      })
       .toFormat('jpeg')
       .toBuffer();
-  }
+  } catch (error) {
+    console.error('Sharp resizeImage error:', error.message);
 
-  return await image
-    .resize(width, height, {
-      fit: options.fitMode || 'cover',
-      position: 'top',
-    })
-    .toFormat('jpeg')
-    .toBuffer();
+    // Optional: throw a more descriptive error or handle differently
+    throw new Error('Invalid or corrupted image buffer');
+  }
 };
 
 export const uploadToCloudinary = (buffer, folder, resource_type = 'image') => {
