@@ -279,7 +279,7 @@ export const myPropertyListings = catchAsync(async (req, res, next) => {
     .limitFields()
     .paginate();
   const properties = await features.query;
-  const totalCount = await Property.countDocuments();
+  const totalCount = await Property.countDocuments({ user: req.user.id });
 
   res.status(200).json({
     status: 'success',
@@ -351,19 +351,31 @@ export const getPropertyListings = catchAsync(async (req, res, next) => {
   if (reviewStatus && !['pending', 'approved', 'rejected'].includes(reviewStatus))
     return next(new AppError('Invalid status provided', 400));
 
-  const features = new APIFeatures(Property.find(reviewStatus && { reviewStatus }), req.query)
+  const queryFilter = reviewStatus ? { reviewStatus } : {};
+
+  const features = new APIFeatures(Property.find(queryFilter), req.query)
     .sort()
     .search(['title', 'type', 'category', 'listingStatus', 'address.city', +'price'])
     .limitFields()
     .paginate();
 
   const properties = await features.query;
-  const totalCount = await Property.countDocuments({ reviewStatus });
 
+  const [pendingCount, approvedCount, rejectedCount, totalCount] = await Promise.all([
+    Property.countDocuments({ reviewStatus: 'pending' }),
+    Property.countDocuments({ reviewStatus: 'approved' }),
+    Property.countDocuments({ reviewStatus: 'rejected' }),
+    Property.countDocuments(), // all
+  ]);
   res.status(200).json({
     status: 'success',
     results: properties.length,
-    data: { properties, totalCount, page: req.query.page || 1, limit: req.query.limit || 10 },
+    data: {
+      properties,
+      counts: { all: totalCount, pendingCount, approvedCount, rejectedCount },
+      page: req.query.page || 1,
+      limit: req.query.limit || 10,
+    },
   });
 });
 
@@ -433,6 +445,7 @@ export const getLastestPropertyListings = catchAsync(async (req, res, next) => {
     data: { properties },
   });
 });
+
 // Get / View Filter Listings
 export const getPropertyListingsFilter = catchAsync(async (req, res, next) => {
   const { reviewStatus } = req.query;

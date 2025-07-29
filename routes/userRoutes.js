@@ -13,7 +13,7 @@ import {
   activateAccount,
   authenticateGuestUser,
 } from '../controller/authController.js';
-import { getAllRealtors, getMe, getUser } from '../controller/userController.js';
+import { getAllClients, getAllRealtors, getMe, getUser } from '../controller/userController.js';
 
 const router = Router();
 
@@ -36,4 +36,5 @@ router.route('/account-activation/:id').patch(activateAccount);
 router.use(restrictTo('admin'));
 
 router.route('/realtors').get(getAllRealtors);
+router.route('/clients').get(getAllClients);
 export default router;

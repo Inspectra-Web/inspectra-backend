@@ -54,7 +54,7 @@ export const updateProfile = catchAsync(async (req, res, next) => {
 
 // Read Realtor Profile
 export const readProfile = catchAsync(async (req, res, next) => {
-  const profile = await Profile.findById(req.params.id);
+  const profile = await Profile.findById(req.params.id).populate('user', 'property');
 
   if (!profile) return next(new AppError('No profile found', 404));
 

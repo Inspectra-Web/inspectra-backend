@@ -53,3 +53,26 @@ export const getAllRealtors = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// Get All Clients
+export const getAllClients = catchAsync(async (req, res, next) => {
+  const filter = { role: 'client' };
+
+  const features = new APIFeatures(
+    User.find(filter).populate('profile', 'avatar gender'),
+    req.query
+  )
+    .sort()
+    .search(['fullname', 'email', 'referralCode'])
+    .limitFields()
+    .paginate();
+
+  const clients = await features.query;
+  const totalCount = await User.countDocuments(filter);
+
+  res.status(200).json({
+    status: 'success',
+    results: clients.length,
+    data: { clients, totalCount, page: req.query.page || 1, limit: req.query.limit || 10 },
+  });
+});
