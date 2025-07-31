@@ -11,6 +11,7 @@ import Profile from '../model/profileModel.js';
 import { canCreateListing } from '../helpers/planHelpers.js';
 import Subscription from '../model/subscriptionModel.js';
 import { fileTypeFromBuffer } from 'file-type';
+import { slugify } from '../helpers/slugify.js';
 // Validate File Size
 const validateFileSize = (files, maxSize, typeLabel) => {
   for (const file of files) {
@@ -236,6 +237,12 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
   property.verified = req.user.role === 'admin' ? verified : false;
   property.variations = variations;
 
+  if (title) {
+    const baseSlug = slugify(title);
+    const shortId = property._id?.toString()?.slice(-6) || crypto.randomUUID().slice(0, 6);
+    property.slug = `${baseSlug}-${shortId}`;
+  } else return next(new AppError('Duplicate Property Title', 400));
+
   await property.save();
 
   if (!propertyId && subscriptionToUpdate) {
@@ -294,6 +301,17 @@ export const onePropertyListing = catchAsync(async (req, res, next) => {
   const realtor = await User.findById(property.user);
 
   if (!property && !realtor) return next(new AppError('No property listing or profile found', 404));
+
+  res.status(200).json({ status: 'success', data: { property, realtor } });
+});
+
+// One Listing with Slug
+export const onePropertyListingBySlug = catchAsync(async (req, res, next) => {
+  const property = await Property.findOne({ slug: req.params.slug });
+  if (!property) return next(new AppError('No property listing found', 404));
+
+  const realtor = await User.findById(property.user);
+  if (!realtor) return next(new AppError('No realtor profile found', 404));
 
   res.status(200).json({ status: 'success', data: { property, realtor } });
 });
@@ -379,26 +397,64 @@ export const getPropertyListings = catchAsync(async (req, res, next) => {
   });
 });
 
-// Get / View Listings Infinite
 export const getPropertyListingsInfinite = catchAsync(async (req, res, next) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10, search = '' } = req.query;
   const skip = (page - 1) * limit;
 
-  const baseQuery = Property.find({ reviewStatus: 'approved' });
+  // Search logic
+  const searchRegex = search.trim() ? new RegExp(search.trim().split(/\s+/).join('|'), 'i') : null;
+  const baseMatch = { reviewStatus: 'approved' };
 
-  const features = new APIFeatures(baseQuery, req.query)
-    .filter()
-    .search(['title', 'address.city', 'address.fullAddress', 'address.state', 'propertyId'])
-    .applyFilters()
-    .limitFields();
-
-  features.query = features.query.sort({
-    isFeatured: -1,
-    createdAt: -1,
+  // Dynamic filters
+  const allowedFilters = ['type', 'category', 'address.city', 'listingStatus'];
+  allowedFilters.forEach(field => {
+    if (req.query[field]) {
+      baseMatch[field] = req.query[field];
+    }
   });
 
-  const properties = await Property.aggregate([
-    { $match: { reviewStatus: 'approved' } },
+  // Combine search and filter
+  const searchStage = searchRegex
+    ? {
+        $or: [
+          { title: { $regex: searchRegex } },
+          { 'address.city': { $regex: searchRegex } },
+          { 'address.fullAddress': { $regex: searchRegex } },
+          { 'address.state': { $regex: searchRegex } },
+          { propertyId: { $regex: searchRegex } },
+        ],
+      }
+    : {};
+
+  const finalMatch = searchRegex ? { $and: [baseMatch, searchStage] } : baseMatch;
+
+  let sortStage = { isFeatured: -1, createdAt: -1 }; // default sort
+
+  if (req.query.sort) {
+    const fields = req.query.sort
+      .split(',')
+      .map(f => [f.replace('-', ''), f.startsWith('-') ? -1 : 1]);
+    const userSort = Object.fromEntries(fields);
+
+    // Always prioritize featured listings
+    sortStage = { isFeatured: -1, ...userSort };
+  }
+
+  // Field limiting logic
+  let projectStage = {
+    __v: 0,
+    updatedAt: 0,
+    isFeatured: 0,
+  };
+  if (req.query.fields) {
+    projectStage = {};
+    req.query.fields.split(',').forEach(field => {
+      projectStage[field] = 1;
+    });
+  }
+
+  const pipeline = [
+    { $match: finalMatch },
     {
       $addFields: {
         isFeatured: {
@@ -406,19 +462,15 @@ export const getPropertyListingsInfinite = catchAsync(async (req, res, next) => 
         },
       },
     },
-    { $sort: { isFeatured: -1, createdAt: -1 } },
-    { $skip: skip },
+    { $sort: sortStage },
+    { $skip: Number(skip) },
     { $limit: Number(limit) },
-    {
-      $project: {
-        __v: 0,
-        updatedAt: 0,
-        isFeatured: 0,
-      },
-    },
-  ]);
+    { $project: projectStage },
+  ];
 
-  const totalCount = await Property.countDocuments({ reviewStatus: 'approved' });
+  const properties = await Property.aggregate(pipeline);
+
+  const totalCount = await Property.countDocuments(finalMatch);
   const totalPages = Math.ceil(totalCount / limit);
 
   res.status(200).json({

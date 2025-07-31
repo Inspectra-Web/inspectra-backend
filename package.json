@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "start:prod": "cross-env NODE_ENV=production nodemon server.js",
-    "start:dev": "nodemon server.js"
+    "start:dev": "nodemon server.js",
+    "start:slug": "node script/seedPropertySlug.js"
   },
   "keywords": [
     "Authentication",

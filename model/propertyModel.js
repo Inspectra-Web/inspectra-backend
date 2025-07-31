@@ -74,6 +74,7 @@ const propertySchema = new Schema(
       // enum: ['per_day', 'per_week', 'per_month', 'per_year', '1_year', '2_year', '3_year_plus'],
       default: '',
     },
+    slug: { type: String, unique: true, trim: true, lowercase: true },
   },
   { timestamps: true }
 );

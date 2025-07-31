@@ -12,6 +12,7 @@ import {
   getRealtorListings,
   myPropertyListings,
   onePropertyListing,
+  onePropertyListingBySlug,
   updateListingReviewStatus,
 } from '../controller/propertyController.js';
 import { upload } from '../utils/upload.js';
@@ -58,4 +59,5 @@ propertyRoute
   .get(onePropertyListing)
   .delete(protect, restrictTo('admin', 'realtor'), deletePropertyListing);
 
+propertyRoute.route('/slug/:slug').get(onePropertyListingBySlug);
 export default propertyRoute;
