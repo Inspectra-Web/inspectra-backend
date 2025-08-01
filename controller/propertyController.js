@@ -593,7 +593,7 @@ export const getRealtorListings = catchAsync(async (req, res, next) => {
 
 export const getFeaturedListings = catchAsync(async (req, res, next) => {
   const featuredListings = await Property.find({ variations: 'Featured' }).select(
-    'images title createdAt yearBuilt features listingStatus variations _id price'
+    'images title createdAt yearBuilt features listingStatus variations _id price slug'
   );
 
   res
