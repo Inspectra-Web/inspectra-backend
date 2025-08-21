@@ -21,7 +21,7 @@ export const flutterwaveWebhook = catchAsync(async (req, res, next) => {
   if (payload?.event !== 'charge.completed' || payload.data.status !== 'successful')
     return res.status(200).json({ message: 'Ignored event' });
   const data = payload.data;
-  const meta = payload.meta_data || {};
+  const meta = payload.meta_data || data.meta || {};
   const email = meta?.userEmail || data.customer?.email;
 
   if (meta.type === 'subscription') {
@@ -81,11 +81,6 @@ export const flutterwaveWebhook = catchAsync(async (req, res, next) => {
     await schedule.save();
 
     const propertyExists = await Property.findById(schedule.property);
-
-    if (propertyExists) {
-      propertyExists.schedules += 1;
-      await propertyExists.save();
-    }
 
     const realtor = await User.findById(schedule.realtor);
 

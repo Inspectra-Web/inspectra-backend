@@ -19,7 +19,7 @@ const scheduleSchema = new Schema(
     totalPaid: { type: Number, default: 0 },
     isPaid: { type: Boolean, default: false },
     isRealtorPaid: { type: Boolean, default: false },
-    paymentStatus: { type: String },
+    paymentStatus: { type: String, default: 'pending' },
     txRef: { type: String },
     flutterwaveTransactionId: { type: String },
   },

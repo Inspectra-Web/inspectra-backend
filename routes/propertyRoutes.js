@@ -39,7 +39,7 @@ propertyRoute
     protect,
     restrictTo('admin', 'realtor'),
     upload.fields([
-      { name: 'images', maxCount: 10 },
+      { name: 'images', maxCount: 15 },
       { name: 'videoFile', maxCount: 1 },
     ]),
     addOrUpdatePropertyListing
@@ -48,7 +48,7 @@ propertyRoute
     protect,
     restrictTo('admin', 'realtor'),
     upload.fields([
-      { name: 'images', maxCount: 10 },
+      { name: 'images', maxCount: 15 },
       { name: 'videoFile', maxCount: 1 },
     ]),
     addOrUpdatePropertyListing

@@ -458,7 +458,7 @@ export const getPropertyListingsInfinite = catchAsync(async (req, res, next) => 
     {
       $addFields: {
         isFeatured: {
-          $cond: [{ $in: ['Featured', '$variations'] }, 1, 0],
+          $cond: [{ $in: ['Featured', { $ifNull: ['$variations', []] }] }, 1, 0],
         },
       },
     },
@@ -575,19 +575,52 @@ export const getLoggedInRealtorListings = catchAsync(async (req, res, next) => {
   });
 });
 
+// export const getRealtorListings = catchAsync(async (req, res, next) => {
+//   const user = await User.findById(req.params.id).populate({
+//     path: 'property',
+//     match: { reviewStatus: 'approved' },
+//     sort: { createdAt: -1 },
+//   });
+
+//   if (!user) return new AppError('User Not Found', 404);
+
+//   res.status(200).json({
+//     status: 'success',
+//     results: user.property.length,
+//     data: { properties: user.property },
+//   });
+// });
+
 export const getRealtorListings = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.params.id).populate({
-    path: 'property',
-    match: { reviewStatus: 'approved' },
-    sort: { createdAt: -1 },
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+  if (!user) return next(new AppError('User not found', 404));
+
+  let query = Property.find({ user: id, reviewStatus: 'approved' });
+
+  const features = new APIFeatures(query, req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate()
+    .search(['title', 'location', 'description']);
+
+  const properties = await features.query;
+
+  const total = await Property.countDocuments({
+    user: id,
+    reviewStatus: 'approved',
+    ...features.filterConditions,
   });
 
-  if (!user) return new AppError('User Not Found', 404);
-
-  res.status(200).json({
+  return res.status(200).json({
     status: 'success',
-    results: user.property.length,
-    data: { properties: user.property },
+    results: properties.length,
+    total,
+    page: parseInt(req.query.page) || 1,
+    totalPages: Math.ceil(total / parseInt(req.query.limit) || 10),
+    data: { properties },
   });
 });
 

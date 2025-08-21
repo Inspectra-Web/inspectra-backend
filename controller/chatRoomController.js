@@ -58,7 +58,7 @@ export const createChatRoom = catchAsync(async (req, res, next) => {
 export const getClientChatRooms = catchAsync(async (req, res, next) => {
   const guestUser = req.user;
   const chatRooms = await ChatRoom.find({ client: guestUser._id })
-    .populate('property', 'title address.city images')
+    .populate('property', 'title address.city images slug')
     .populate('realtor', 'fullname email role profile');
 
   res.status(200).json({
@@ -74,7 +74,7 @@ export const getRealtorChatRooms = catchAsync(async (req, res, next) => {
   if (!realtorId) return next(new AppError('Unauthorized Realtor', 401));
 
   const chatRooms = await ChatRoom.find({ realtor: realtorId })
-    .populate('property', 'title address.city images')
+    .populate('property', 'title address.city images slug')
     .populate('client', 'fullname email profile role');
 
   res.status(200).json({ status: 'success', data: { chatRooms } });

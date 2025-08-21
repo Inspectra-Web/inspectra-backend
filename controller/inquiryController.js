@@ -36,63 +36,69 @@ export const sendInquiryMessage = catchAsync(async (req, res, next) => {
   //   });
   // }
 
-  let chatRoom = await ChatRoom.findOne({
-    property,
-    client: client._id,
-    realtor: manager._id,
-  });
+  try {
+    // 🔴
+    await new Email(
+      manager,
+      `${envConfig.CLIENT_URL}/app/manage-property/${propertyExists._id}`,
+      message,
+      {},
+      '',
+      { title: propertyExists.title },
+      { clientName: client.fullname, clientEmail: client.email, urgencyLevel }
+    ).sendInquiryNotification();
 
-  if (!chatRoom) {
-    chatRoom = await ChatRoom.create({
+    let chatRoom = await ChatRoom.findOne({
       property,
       client: client._id,
       realtor: manager._id,
     });
+
+    if (!chatRoom) {
+      chatRoom = await ChatRoom.create({
+        property,
+        client: client._id,
+        realtor: manager._id,
+      });
+    }
+
+    // 🔵
+    const inquiry = await Inquiry.create({
+      property,
+      propertyManager: propertyManager.fullname,
+      realtor: manager._id,
+      client: client._id,
+      clientName: client.fullname,
+      clientEmail: client.email,
+      message,
+      urgencyLevel,
+      preferredContactMethod,
+    });
+
+    propertyExists.inquiries += 1;
+    await propertyExists.save();
+
+    //   // 🟢
+    //   await new Email(
+    //     guestUser,
+    //     `${envConfig.CLIENT_URL}/guest-chat/${guestUser.chatAccessToken}`,
+    //     '',
+    //     {},
+    //     '',
+    //     { title: propertyExists.title },
+    //     { clientName }
+    //   ).sendGuestChatLink();
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Inquiry submitted successfully. Check your mail to access your chat room!',
+      data: { inquiry, chatRoomId: chatRoom._id },
+    });
+  } catch (error) {
+    return next(
+      new AppError('We couldn’t send your message to the realtor. Please try again later.', 500)
+    );
   }
-
-  // 🔵
-  const inquiry = await Inquiry.create({
-    property,
-    propertyManager: propertyManager.fullname,
-    realtor: manager._id,
-    client: client._id,
-    clientName: client.fullname,
-    clientEmail: client.email,
-    message,
-    urgencyLevel,
-    preferredContactMethod,
-  });
-
-  propertyExists.inquiries += 1;
-  await propertyExists.save();
-
-  //   // 🟢
-  //   await new Email(
-  //     guestUser,
-  //     `${envConfig.CLIENT_URL}/guest-chat/${guestUser.chatAccessToken}`,
-  //     '',
-  //     {},
-  //     '',
-  //     { title: propertyExists.title },
-  //     { clientName }
-  //   ).sendGuestChatLink();
-
-  // 🔴
-  await new Email(
-    manager,
-    `${envConfig.CLIENT_URL}/app/manage-property/${propertyExists._id}`,
-    message,
-    {},
-    '',
-    { title: propertyExists.title },
-    { clientName: client.fullname, clientEmail: client.email, urgencyLevel }
-  ).sendInquiryNotification();
-
-  res.status(201).json({
-    status: 'success',
-    message: 'Inquiry submitted successfully. Check your mail to access your chat room!',
-    data: { inquiry, chatRoomId: chatRoom._id },
-  });
 });
 
 export const getInquiriesForRealtor = catchAsync(async (req, res, next) => {
@@ -119,7 +125,7 @@ export const getInquiriesForClient = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
     Inquiry.find({ client: req.user._id })
       .populate('realtor', 'profile')
-      .populate('property', 'propertyId'),
+      .populate('property', 'propertyId slug'),
     req.query
   )
     .sort()
