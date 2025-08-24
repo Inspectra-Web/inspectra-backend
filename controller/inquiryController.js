@@ -48,20 +48,6 @@ export const sendInquiryMessage = catchAsync(async (req, res, next) => {
       { clientName: client.fullname, clientEmail: client.email, urgencyLevel }
     ).sendInquiryNotification();
 
-    let chatRoom = await ChatRoom.findOne({
-      property,
-      client: client._id,
-      realtor: manager._id,
-    });
-
-    if (!chatRoom) {
-      chatRoom = await ChatRoom.create({
-        property,
-        client: client._id,
-        realtor: manager._id,
-      });
-    }
-
     // 🔵
     const inquiry = await Inquiry.create({
       property,
@@ -77,6 +63,24 @@ export const sendInquiryMessage = catchAsync(async (req, res, next) => {
 
     propertyExists.inquiries += 1;
     await propertyExists.save();
+
+    let chatRoom = await ChatRoom.findOne({
+      property,
+      client: client._id,
+      realtor: manager._id,
+    });
+
+    if (!chatRoom) {
+      chatRoom = await ChatRoom.create({
+        property,
+        client: client._id,
+        realtor: manager._id,
+        inquiry: inquiry._id,
+      });
+    }
+
+    inquiry.chatRoom = chatRoom._id;
+    inquiry.save();
 
     //   // 🟢
     //   await new Email(
@@ -95,6 +99,7 @@ export const sendInquiryMessage = catchAsync(async (req, res, next) => {
       data: { inquiry, chatRoomId: chatRoom._id },
     });
   } catch (error) {
+    console.error(error);
     return next(
       new AppError('We couldn’t send your message to the realtor. Please try again later.', 500)
     );

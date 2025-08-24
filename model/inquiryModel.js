@@ -23,6 +23,7 @@ const inquirySchema = new Schema(
     },
     property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },
     realtor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    chatRoom: { type: Schema.Types.ObjectId, ref: 'ChatRoom' },
     propertyManager: { type: String, required: true },
   },
   { timestamps: true }

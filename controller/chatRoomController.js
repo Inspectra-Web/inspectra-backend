@@ -59,7 +59,8 @@ export const getClientChatRooms = catchAsync(async (req, res, next) => {
   const guestUser = req.user;
   const chatRooms = await ChatRoom.find({ client: guestUser._id })
     .populate('property', 'title address.city images slug')
-    .populate('realtor', 'fullname email role profile');
+    .populate('realtor', 'fullname email role profile')
+    .sort({ createdAt: -1 });
 
   res.status(200).json({
     status: 'success',
@@ -75,7 +76,8 @@ export const getRealtorChatRooms = catchAsync(async (req, res, next) => {
 
   const chatRooms = await ChatRoom.find({ realtor: realtorId })
     .populate('property', 'title address.city images slug')
-    .populate('client', 'fullname email profile role');
+    .populate('client', 'fullname email profile role')
+    .sort({ createdAt: -1 });
 
   res.status(200).json({ status: 'success', data: { chatRooms } });
 });
