@@ -85,7 +85,7 @@ const propertySchema = new Schema(
     specialOffer: { type: String, default: '', trim: true, maxLength: 200 }, // e.g., "✨ Special: 2+ nights @ ₦55,000/night"
     notablePoint: { type: String }, // e.g., ["Perfect for shortlet, annual rental investment, or personal residence", "Payment Plan Available: 50% down and 2 months balance"]
 
-    // --- NEW FIELDS FOR LEGAL FEES & DOCUMENTS ---
+    // --- NEW FIELDS FOR LEGAL DOCUMENTS ---
     legalDocuments: [
       {
         name: {
@@ -130,7 +130,7 @@ const propertySchema = new Schema(
         size: { type: Number },
       },
     ],
-    
+
     // --- NEW FIELDS: TRANSPARENT FEES & TERMS ---
     transparentFeesAndTerms: {
       basePrice: { type: Number, required: false, min: 0 },
