@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   addOrUpdatePropertyListing,
+  deleteLegalDocument,
   deletePropertyListing,
   getFeaturedListings,
   getLastestPropertyListings,
@@ -41,6 +42,7 @@ propertyRoute
     upload.fields([
       { name: 'images', maxCount: 15 },
       { name: 'videoFile', maxCount: 1 },
+      { name: 'legalDocuments', maxCount: 5 },
     ]),
     addOrUpdatePropertyListing
   )
@@ -50,6 +52,7 @@ propertyRoute
     upload.fields([
       { name: 'images', maxCount: 15 },
       { name: 'videoFile', maxCount: 1 },
+      { name: 'legalDocuments', maxCount: 5 },
     ]),
     addOrUpdatePropertyListing
   );
@@ -60,4 +63,7 @@ propertyRoute
   .delete(protect, restrictTo('admin', 'realtor'), deletePropertyListing);
 
 propertyRoute.route('/slug/:slug').get(onePropertyListingBySlug);
+propertyRoute
+  .route('/:propertyId/legal-documents/:documentId')
+  .delete(protect, deleteLegalDocument);
 export default propertyRoute;

@@ -75,3 +75,12 @@ export const deleteFromCloudinary = async (publicId, resourceType = 'image') =>
       else resolve(result);
     })
   );
+
+export const getFileInfo = async publicId => {
+  try {
+    const result = await cloudinary.api.resource(publicId);
+    return result.bytes;
+  } catch (error) {
+    console.error(error);
+  }
+};

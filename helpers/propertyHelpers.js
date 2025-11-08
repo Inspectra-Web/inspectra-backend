@@ -17,6 +17,7 @@ const validateCategoryTypes = {
     'mansion',
     'self-contained',
     'flat',
+    'maisonette',
   ],
   commercial: [
     'studio',

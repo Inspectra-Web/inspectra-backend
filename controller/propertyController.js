@@ -29,12 +29,19 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
     return next(new AppError('Kindly verify your profile to proceed!', 400));
 
   const { files } = req;
+  console.log(files);
   const imageFiles = files?.images || [];
   const videoFiles = files?.videoFile || [];
+  const legalDocFiles = files?.legalDocuments || [];
+  const legalDocumentsData = req.body.legalDocumentsData
+    ? JSON.parse(req.body.legalDocumentsData)
+    : [];
 
   try {
     validateFileSize(imageFiles, 5 * 1024 * 1024, 'Each image');
     if (videoFiles.length > 0) validateFileSize([videoFiles[0]], 50 * 1024 * 1024, 'Video');
+    if (legalDocFiles.length > 0)
+      validateFileSize(legalDocFiles, 10 * 1024 * 1024, 'Each legal document');
   } catch (err) {
     return next(err);
   }
@@ -66,7 +73,15 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
     verified,
     inspectionCost,
     rentalDuration,
+    urgencyTag,
+    negotiableStatus,
+    specialOffer,
+    notablePoint,
   } = req.body;
+
+  // const transparentFeesAndTerms = req.body.transparentFeesAndTerms
+  //   ? JSON.parse(req.body.transparentFeesAndTerms)
+  //   : null;
 
   if (
     !title ||
@@ -86,6 +101,26 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
         400
       )
     );
+
+  // if (transparentFeesAndTerms) {
+  //   const {
+  //     basePrice,
+  //     currency,
+  //     paymentTerms,
+  //     negotiability,
+  //     additionalFees,
+  //     refundPolicy,
+  //     duration,
+  //     utilitiesIncluded,
+  //     specialNotes,
+  //   } = transparentFeesAndTerms;
+
+  //   if (!basePrice || !currency)
+  //     return next(new AppError('Transparent Fees must include base price and currency.', 400));
+
+  //   if (!additionalFees && !Array.isArray(additionalFees))
+  //     return next(new AppError('Additional Fees must be an array.', 400));
+  // }
 
   try {
     validatePropertyCategoryAndType(category, type);
@@ -217,6 +252,58 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
       return next(new AppError('Video upload failed. Please try again.', 500));
     }
   }
+
+  let newLegalDocuments = property.legalDocuments || [];
+
+  if (newLegalDocuments.length + legalDocFiles.length > 5)
+    return next(
+      new AppError(
+        `You can only have up to 5 legal documents per property. You already have ${newLegalDocuments.length}`,
+        400
+      )
+    );
+  if (legalDocFiles.length > 0) {
+    try {
+      const uploadedDocs = [];
+
+      for (let i = 0; i < legalDocFiles.length; i++) {
+        const file = legalDocFiles[i];
+        const metadata = legalDocumentsData[i] || {};
+
+        const fileTypeInfo = await fileTypeFromBuffer(file.buffer);
+        if (
+          !fileTypeInfo ||
+          (!fileTypeInfo.mime.startsWith('image/') && !fileTypeInfo.mime.includes('pdf'))
+        ) {
+          console.warn('Skipped invalid document: ', file.originalname);
+          continue;
+        }
+
+        const cloudinaryUpload = await uploadToCloudinary(
+          file.buffer,
+          'property_legal_docs',
+          'auto'
+        );
+
+        console.log(cloudinaryUpload);
+
+        uploadedDocs.push({
+          name: metadata.name || 'other',
+          notes: metadata.notes || '',
+          issuedDate: metadata.issuedDate || null,
+          fileUrl: cloudinaryUpload.secure_url,
+          publicId: cloudinaryUpload.public_id,
+          verificationStatus: 'pending',
+          size: cloudinaryUpload.bytes,
+        });
+      }
+
+      newLegalDocuments = [...newLegalDocuments, ...uploadedDocs];
+    } catch (error) {
+      console.error('Legal documents upload failed: ', error);
+      return next(new AppError('Legal documents upload failed. Please try again.', 500));
+    }
+  }
   property.title = title;
   property.type = type;
   property.category = category;
@@ -236,6 +323,12 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
   property.reviewStatus = req.user.role === 'admin' ? property.reviewStatus : 'pending';
   property.verified = req.user.role === 'admin' ? verified : false;
   property.variations = variations;
+  property.urgencyTag = urgencyTag;
+  property.negotiableStatus = negotiableStatus;
+  property.specialOffer = specialOffer;
+  property.notablePoint = notablePoint;
+  property.legalDocuments = newLegalDocuments;
+  // property.transparentFeesAndTerms = transparentFeesAndTerms;
 
   if (title) {
     const baseSlug = slugify(title);
@@ -263,14 +356,18 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
   );
 
   if (req.user.role !== 'admin')
-    await new Email(
-      propertyUser,
-      `${envConfig.CLIENT_URL}/app/manage-property/${property._id}`,
-      propertyId ? 'updated' : 'created',
-      {},
-      envConfig.EMAIL_FROM,
-      property
-    ).sendAdminListingNotice();
+    try {
+      await new Email(
+        propertyUser,
+        `${envConfig.CLIENT_URL}/app/manage-property/${property._id}`,
+        propertyId ? 'updated' : 'created',
+        {},
+        envConfig.EMAIL_FROM,
+        property
+      ).sendAdminListingNotice();
+    } catch (emailErr) {
+      console.error('Email sending failed: ', emailErr.message);
+    }
 
   res.status(propertyId ? 200 : 201).json({
     message: `Property Listing ${propertyId ? 'updated' : 'created'} successfully`,
@@ -632,4 +729,46 @@ export const getFeaturedListings = catchAsync(async (req, res, next) => {
   res
     .status(200)
     .json({ status: 'success', results: featuredListings.length, data: featuredListings });
+});
+
+export const deleteLegalDocument = catchAsync(async (req, res, next) => {
+  const { propertyId, documentId } = req.params;
+  const property = await Property.findById(propertyId);
+  if (!property) return next(new AppError('Property Not Found', 404));
+
+  const doc = property.legalDocuments.id(documentId);
+  if (!doc) return next(new AppError('Legal Document Not Found', 404));
+
+  const isOwner = property.user.toString() === req.user._id.toString();
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isAdmin) {
+    if (!isOwner) return next(new AppError('Not authorized', 403));
+    if (doc.verificationStatus === 'verified')
+      return next(new AppError('Only admin can delete verified documents', 403));
+  }
+
+  if (doc.publicId) {
+    try {
+      await deleteFromCloudinary(doc.publicId);
+    } catch (error) {
+      console.log('Cloudinary delete failed', error);
+    }
+  }
+
+  // Now remove the subdocument from the Mongoose document properly:
+  if (doc.remove && typeof doc.remove === 'function') {
+    // doc is a Mongoose subdocument
+    doc.remove();
+  } else {
+    // doc is plain object (unlikely if you used findById above), so filter manually
+    property.legalDocuments = property.legalDocuments.filter(d =>
+      d._id
+        ? d._id.toString() !== documentId + ''
+        : d.publicId !== documentId && d.fileUrl !== documentId
+    );
+  }
+  await property.save();
+
+  res.status(200).json({ message: 'Legal document deleted', data: { documentId } });
 });

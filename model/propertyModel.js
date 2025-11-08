@@ -9,7 +9,7 @@ const propertySchema = new Schema(
       type: String,
       required: [true, 'Property type is required'],
       // prettier-ignore
-      enum: ['office', 'warehouse', 'land', 'apartment', 'condominium', 'duplex', 'townhouse', 'villa', 'bungalow', 'single-family-home', 'multi-family-home', 'studio', 'penthouse', 'hotel', 'resort', 'restaurant', 'serviced-apartment', 'hospital', 'school', 'farm', 'campground', 'mansion', 'self-contained', 'flat', 'other',
+      enum: ['office', 'warehouse', 'land', 'apartment', 'condominium', 'duplex', 'townhouse', 'villa', 'bungalow', 'single-family-home', 'multi-family-home', 'studio', 'penthouse', 'hotel', 'resort', 'restaurant', 'serviced-apartment', 'hospital', 'school', 'farm', 'campground', 'mansion', 'maisonette', 'self-contained', 'flat', 'other',
     ],
     },
     category: {
@@ -75,6 +75,85 @@ const propertySchema = new Schema(
       default: '',
     },
     slug: { type: String, unique: true, trim: true, lowercase: true },
+    // --- NEW FIELDS FOR HIGHLIGHTS & NOTABLE POINTS ---
+    urgencyTag: { type: String, lowercase: true }, // e.g., "1 UNIT LEFT📌", "Limited Offer"
+    negotiableStatus: {
+      type: String,
+      enum: ['Negotiable', 'Slightly Negotiable', 'Asking'],
+      default: 'Asking',
+    },
+    specialOffer: { type: String, default: '', trim: true, maxLength: 200 }, // e.g., "✨ Special: 2+ nights @ ₦55,000/night"
+    notablePoint: { type: String }, // e.g., ["Perfect for shortlet, annual rental investment, or personal residence", "Payment Plan Available: 50% down and 2 months balance"]
+
+    // --- NEW FIELDS FOR LEGAL FEES & DOCUMENTS ---
+    legalDocuments: [
+      {
+        name: {
+          type: String,
+          required: true,
+          enum: [
+            'Certificate of Occupancy (C of O)',
+            'Governor’s Consent',
+            'Deed of Assignment',
+            'Deed of Conveyance',
+            'Deed of Lease / Sublease',
+            'Power of Attorney',
+            'Land Purchase Receipt',
+            'Registered Survey Plan',
+            'Excision / Gazette',
+            'Building Plan Approval',
+            'Environmental Impact Assessment (EIA)',
+            'Completion Certificate',
+            'Certificate of Habitability',
+            'Property Tax Clearance Certificate',
+            'Valuation Report',
+            'Tenancy Agreement',
+            'Lease Agreement',
+            'Inspection Report',
+            'Estate Allocation Letter',
+            'Agency Agreement',
+            'Government Allocation Letter',
+            'Affidavit of Ownership',
+            'Offer Letter / Acceptance Letter',
+            'Other',
+          ],
+        },
+        notes: { type: String }, // optional description or comments
+        fileUrl: { type: String }, // optional scanned copy / image / pdf
+        publicId: { type: String }, // Cloudinary or storage ref
+        verificationStatus: {
+          type: String,
+          enum: ['pending', 'rejected', 'verified'],
+          default: 'pending',
+        }, // has Inspectra/legal partner checked this?
+        issuedDate: { type: Date }, // optional date document was issued
+        size: { type: Number },
+      },
+    ],
+    
+    // --- NEW FIELDS: TRANSPARENT FEES & TERMS ---
+    transparentFeesAndTerms: {
+      basePrice: { type: Number, required: false, min: 0 },
+      currency: { type: String, default: 'NGN' },
+      paymentTerms: { type: String, trim: true },
+      negotiability: {
+        rent: { type: Boolean, default: false },
+        agencyFee: { type: Boolean, default: false },
+        legalFee: { type: Boolean, default: false },
+      },
+      additionalFees: [
+        {
+          name: { type: String, required: true },
+          description: { type: String },
+          amount: { type: Number, required: true, min: 0 },
+          optional: { type: Boolean, default: false },
+        },
+      ],
+      refundPolicy: { type: String, trim: true },
+      duration: { type: String, trim: true },
+      utilitiesIncluded: { type: String, trim: true },
+      specialNotes: { type: String, trim: true },
+    },
   },
   { timestamps: true }
 );
