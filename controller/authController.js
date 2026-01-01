@@ -138,7 +138,7 @@ export const otpVerification = catchAsync(async (req, res, next) => {
 
   if (!user) return next(new AppError('User not found.', 404));
 
-  if (user.emailVerified) return next(new AppError('User is already verified', 404));
+  if (user.emailVerified) return next(new AppError('User is already verified', 401));
 
   const url = `${envConfig.CLIENT_URL}/verify/${signToken({
     id: user.id,

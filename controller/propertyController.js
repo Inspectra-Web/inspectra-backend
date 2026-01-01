@@ -12,6 +12,7 @@ import { canCreateListing } from '../helpers/planHelpers.js';
 import Subscription from '../model/subscriptionModel.js';
 import { fileTypeFromBuffer } from 'file-type';
 import { slugify } from '../helpers/slugify.js';
+
 // Validate File Size
 const validateFileSize = (files, maxSize, typeLabel) => {
   for (const file of files) {
@@ -213,16 +214,6 @@ export const addOrUpdatePropertyListing = catchAsync(async (req, res, next) => {
 
       newlyUploadedImages = uploadedImages;
       newImages = [...newImages, ...newlyUploadedImages];
-      // const imagesUploadPromises = imageFiles.map(async file => {
-      //   const resizeImg = await resizeImage(file?.buffer, 1600, 800, { preserveAspect: true });
-      //   const { secure_url, public_id } = await uploadToCloudinary(resizeImg, 'property_images');
-
-      //   return { url: secure_url, publicId: public_id };
-      // });
-
-      // const uploadedImages = await Promise.all(imagesUploadPromises);
-      // newlyUploadedImages = uploadedImages;
-      // newImages = [...newImages, ...uploadedImages];
     } catch (error) {
       console.error(error);
       return next(new AppError('Image upload failed. Please try again.', 500));

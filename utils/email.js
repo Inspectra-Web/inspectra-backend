@@ -3,9 +3,12 @@ import { envConfig } from '../configuration/environmentConfig.js';
 import { renderFile } from 'pug';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { Resend } from 'resend';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const resend = new Resend(envConfig.RESEND_API_KEY);
 
 export class Email {
   constructor(user, url, reason = '', document = {}, admin, property = {}, clientDetail = {}) {
@@ -25,14 +28,14 @@ export class Email {
     this.clientDetail = clientDetail;
   }
 
-  newTransport() {
-    return createTransport({
-      host: envConfig.EMAIL_HOST,
-      port: envConfig.EMAIL_PORT,
-      secure: true,
-      auth: { pass: envConfig.EMAIL_PASSWORD, user: envConfig.EMAIL_USERNAME },
-    });
-  }
+  // newTransport() {
+  //   return createTransport({
+  //     host: envConfig.EMAIL_HOST,
+  //     port: envConfig.EMAIL_PORT,
+  //     secure: true,
+  //     auth: { pass: envConfig.EMAIL_PASSWORD, user: envConfig.EMAIL_USERNAME },
+  //   });
+  // }
 
   async send(template, subject) {
     const html = renderFile(`${__dirname}/../views/${template}.pug`, {
@@ -61,7 +64,7 @@ export class Email {
       html,
     };
 
-    await this.newTransport().sendMail(mailOptions);
+    await resend.emails.send(mailOptions);
   }
 
   async sendWelcome() {
